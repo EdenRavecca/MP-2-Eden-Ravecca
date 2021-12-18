@@ -163,7 +163,64 @@ tm_shape(nlcd_771_mode) +
              position=c("left", "top"))
 
 
-
+# required libraries
+library(leaflet, quietly = T, warn.conflicts = F)
+# start basemap
+map <- leaflet() %>% 
+  
+  # add basemap
+  addProviderTiles(providers$Esri.NatGeoWorldMap) %>%
+  
+  # add another layer with place names
+  addProviderTiles(providers$Hydda.RoadsAndLabels, group = 'Place names') %>%
+  
+  # add graticules from a NOAA webserver
+  # addWMSTiles(
+  #   "https://gis.ngdc.noaa.gov/arcgis/services/graticule/MapServer/WMSServer/",
+  #   layers = c("1-degree grid", "5-degree grid"),
+  #   options = WMSTileOptions(format = "image/png8", transparent = TRUE),
+  #   attribution = NULL,group = 'Graticules') %>%
+  
+  # focus map in a certain area / zoom level
+  setView(lng = -116, lat = 43, zoom = 5)%>%
+  
+  # add layers control
+  addLayersControl(overlayGroups = c('Place names',
+                                     'Graticules',
+                                     'Points',
+                                     'Lines',
+                                     'Polygons'),
+                   options = layersControlOptions(collapsed = FALSE),
+                   position = 'topright') %>%
+  
+  # list groups to hide on startup
+  hideGroup(c('Place names'))
+# show map
+map
+### Add data
+str(w.census)
+wc.reproj <- st_transform(cp.summary, crs = st_crs(4326))
+prfa.wgs <- st_transform(prfa, crs = st_crs(4326))
+library(htmltools)
+labs <- as.list(prfa.wgs$locality)
+labs2 <- as.list(wc.reproj$avg_pop)
+## Color setup
+colpal <- colorNumeric(palette = "magma", domain=wc.reproj[['avg_pop']], n=10)
+colorData <- wc.reproj[["avg_pop"]]
+map <- map %>%
+  addTiles() %>%
+  addPolygons(data = wc.reproj, label = lapply(labs2, HTML), color = ~colpal(colorData),
+              fill=NA, weight=1)
+map <- map %>%
+  addCircleMarkers(data = prfa.wgs$geometry,
+                   weight = 0.5,
+                   label = lapply(labs, HTML),
+                   col = 'black', 
+                   fillColor = 'darkslategrey',
+                   radius = 4, 
+                   fillOpacity = 0.9, 
+                   stroke = T)
+map
 
 
 
