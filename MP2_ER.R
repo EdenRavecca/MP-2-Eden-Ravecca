@@ -65,18 +65,10 @@ ppt.crop <- terra::crop(ppt_hist_reproj, w.states.vect) # crop Precip. SpatRaste
 
 #########################.... Aggregate & Resample Rasters ....#########################
 
-cls <- c("Unclassified", "Open Water", "Perennial Ice/Snow", "Developed, Open Space", 
-         "Developed, Low Intensity", "Developed, Medium Intensity", 
-         "Developed High Intensity", "Barren Land", "Deciduous Forest", 
-         "Evergreen Forest", "Mixed Forest", "Shrub/Scrub", "Herbaceous", 
-         "Hay/Pasture", "Cultivated Crops", "Woody Wetlands", "Emergent Herbaceous Wetlands")
-
-nlcd.cats <- terra::cats(nlcd_data_terr2, layer=1) # define nlcd categories
 nlcd_modeval <- terra::aggregate(nlcd.fullres.crop, fact=26, fun="modal") # aggregate to 780 m resolution and assign modal value from NLCD classes
 m <- rast(extent= ext(w.states.vect), crs= crs(nlcd.fullres.crop), resolution= 771) # blank raster for template
-nlcd_771_mode <- terra::resample(nlcd_modeval, m, method= "near", factors=TRUE) # resample to 771 m resolution and assign NLCD value based on "nearest neighbor"
-levels(nlcd_771_mode) <- nlcd.cats # nlcd Land Cover classes as levels
-names(nlcd_771_mode) <- "NLCD.Land.Cover.Class"
+nlcd_771_mode <- terra::resample(nlcd_modeval, m, method= "near") # resample to 771 m resolution and assign NLCD value based on "nearest neighbor"
+# levels(nlcd_771_mode)
 is.factor(nlcd_771_mode)
 head(nlcd_771_mode)
 
@@ -134,7 +126,7 @@ tm_shape(cp.summary) +
              position=c("left", "top"))
 
 brew.ygb <- brewer.pal(8, "YlGnBu")
-tmap_mode("plot")
+#tmap_mode("plot")
 tm_shape(ppt.crop) +
   tm_raster("Ppt_annual_historical", palette= brew.ygb, n=8, legend.show=TRUE, 
             title = "Annual Historical Precipitation (mm)") +
